@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>구미캠퍼스 식단표</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--text:#1c2430;--sub:#667085;--line:#e4e7ec;--accent:#1d6fd8;--accentbg:#e8f1fd;--b:#f59e0b;--l:#16a34a;--d:#7c3aed;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10141a;--card:#1a2029;--text:#e8ecf2;--sub:#98a2b3;--line:#2a323d;--accent:#5aa2f5;--accentbg:#1b2d46;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10141a;--card:#1a2029;--text:#e8ecf2;--sub:#98a2b3;--line:#2a323d;--accent:#5aa2f5;--accentbg:#1b2d46;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;line-height:1.5}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:22px;margin:0 0 4px}
+.note{color:var(--sub);font-size:13px;margin:0 0 16px}
+.times{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.t{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:12px;color:var(--sub)}
+.t b{display:block;color:var(--text);font-size:13px}
+.tabs{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto}
+.tab{flex:1;min-width:56px;border:1px solid var(--line);background:var(--card);color:var(--text);padding:10px 0;border-radius:10px;font-size:14px;cursor:pointer;font-family:inherit}
+.tab.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.tab small{display:block;font-size:10px;opacity:.85}
+.meal{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.mh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.mh h2{font-size:16px;margin:0}
+.mh span{font-size:12px;color:var(--sub)}
+.m-b h2{color:var(--b)}.m-l h2{color:var(--l)}.m-d h2{color:var(--d)}
+.dishes{display:flex;flex-wrap:wrap;gap:6px}
+.dish{background:var(--accentbg);border-radius:8px;padding:4px 10px;font-size:14px}
+.empty{color:var(--sub);font-size:14px}
+h3{font-size:15px;margin:24px 0 8px}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:12.5px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--sub);font-weight:600;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+tr.today td,tr.today th{background:var(--accentbg)}
+.foot{margin-top:16px;font-size:12px;color:var(--sub)}
+.foot a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🍚 구미캠퍼스 식단표</h1>
+  <p class="note">※ 식당 운영 및 식자재 수급 상황에 따라 메뉴가 변경될 수 있습니다.</p>
+  <div class="times">
+    <div class="t"><b>아침</b>07:50 ~ 08:40</div>
+    <div class="t"><b>점심</b>11:50 ~ 13:10</div>
+    <div class="t"><b>저녁</b>16:50 ~ 17:40<br>수업 있는 학생 월~목 18시까지</div>
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <div id="day"></div>
+  <h3>주간 한눈에 보기</h3>
+  <div class="tw"><table id="week"></table></div>
+  <p class="foot">출처: <a href="https://www.kopo.ac.kr/gumi/content.do?menu=4941">한국폴리텍대학 구미캠퍼스 식단정보</a> · 위 내용은 조회 시점의 스냅샷이며 최신 식단은 학교 홈페이지에서 확인하세요.</p>
+</div>
+<script>
+var DAYS=["월","화","수","목","금"];
+var NAMES=["월요일","화요일","수요일","목요일","금요일"];
+var M=[
+["컵밥, 음료","잡곡밥, 만둣국, 돈갈비찜, 꽃맛살샐러드, 오이양파무침, 포기김치","쌀밥, 얼큰쇠고기무국, 두부조림, 모듬강정, 호박당근볶음, 포기김치"],
+["모카크림빵, 흰우유","잡곡밥, 참치김치찌개, 어니언치킨까스, 건새우마늘쫑무침, 단배추생채, 깍두기","흰밥, 돼지국밥, 야채고로케/케찹, 풋고추된장무침, 부추양파무침, 석박지/요구르트"],
+["컵밥, 음료","나가사끼짬뽕, 마파두부, 깐쇼새우, 토마토샐러드/드레싱, 포기김치, 흰밥","흰밥, 유부장국, 불닭볶음닭, 맛감자/케이준S, 케요네즈, 포기김치"],
+["모카크림빵, 흰우유","잡곡밥, 조랭이미역국, 바싹불고기/파채, 무조림, 명엽채조림, 포기김치","흰밥, 부대찌개, 계란후라이, 청양멸치볶음, 상추양파무침, 포기김치"],
+["컵밥, 음료","콩나물밥/양념장, 바지락고추장찌개, 팽이버섯짬뽕조림, 도시락김, 포기김치, 음료","쌀밥, 계란탕, 오징어당면볶음, 강된장, 양배추찜/간장, 포기김치"]
+];
+var MEALS=[["조식","m-b","07:50 ~ 08:40"],["중식","m-l","11:50 ~ 13:10"],["석식","m-d","16:50 ~ 17:40"]];
+var g=new Date().getDay();
+var today=(g>=1&&g<=5)?g-1:-1;
+var sel=today>=0?today:0;
+function render(){
+  var tabs=document.getElementById("tabs");tabs.innerHTML="";
+  DAYS.forEach(function(d,i){
+    var b=document.createElement("button");
+    b.className="tab"+(i===sel?" on":"");
+    b.innerHTML=d+(i===today?"<small>오늘</small>":"<small>&nbsp;</small>");
+    b.onclick=function(){sel=i;render();};
+    tabs.appendChild(b);
+  });
+  var h="";
+  MEALS.forEach(function(m,k){
+    var items=M[sel][k].split(",").map(function(s){return s.trim();}).filter(Boolean);
+    h+='<div class="meal '+m[1]+'"><div class="mh"><h2>'+m[0]+'</h2><span>'+m[2]+'</span></div><div class="dishes">'+
+      (items.length?items.map(function(x){return '<span class="dish">'+x+'</span>';}).join(""):'<span class="empty">등록된 메뉴가 없습니다</span>')+
+      '</div></div>';
+  });
+  document.getElementById("day").innerHTML=h;
+  var t='<tr><th>구분</th><th>조식</th><th>중식</th><th>석식</th></tr>';
+  NAMES.forEach(function(n,i){
+    t+='<tr class="'+(i===today?"today":"")+'"><th>'+n+'</th><td>'+M[i][0]+'</td><td>'+M[i][1]+'</td><td>'+M[i][2]+'</td></tr>';
+  });
+  document.getElementById("week").innerHTML=t;
+}
+render();
+</script>
+</body>
+</html>
